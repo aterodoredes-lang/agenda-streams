@@ -125,7 +125,57 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 .panel-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:auto;padding-top:8px;border-top:1px solid var(--line)}
 .err{color:var(--danger);font-size:var(--small)}
 
-.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:.88rem;z-index:30;box-shadow:0 6px 20px rgba(0,0,0,.2)}
+/* Ver integrantes en la tarjeta */
+.item{cursor:pointer}
+.item:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.see{display:inline-flex;align-items:center;gap:8px;margin-top:4px;font-size:var(--small);font-weight:600;color:var(--accent)}
+.faces{display:inline-flex}
+.faces .av{width:24px;height:24px;font-size:.62rem;border:2px solid var(--surface);margin-left:-7px}
+.faces .av:first-child{margin-left:0}
+
+/* Avatares */
+.av{flex:none;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-family:var(--font-display);font-weight:800;font-stretch:85%;letter-spacing:.02em}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.av.loading{background:linear-gradient(100deg,var(--accent-soft) 30%,var(--surface) 50%,var(--accent-soft) 70%);background-size:300% 100%;animation:shimmer 1.2s linear infinite}
+@keyframes shimmer{from{background-position:100% 0}to{background-position:0 0}}
+
+/* Galería */
+.gal-overlay{position:fixed;inset:0;z-index:25;background:color-mix(in srgb,#0b0e1a 72%,transparent);display:flex;align-items:center;justify-content:center;padding:16px}
+.gal{position:relative;width:min(1080px,100%);max-height:calc(100% - 16px);overflow-y:auto;background:var(--surface);border:1.5px solid var(--card-line);border-radius:14px;box-shadow:0 4px 0 var(--card-depth),0 24px 60px rgba(0,0,0,.35);padding:22px 0 26px}
+.gal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:0 22px}
+.gal-kicker{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.gal-title{font-family:var(--font-display);font-weight:800;font-stretch:78%;text-transform:uppercase;font-size:clamp(1.4rem,3.6vw,2rem);line-height:1.05;margin:4px 0 0;text-wrap:balance}
+.gal-sub{margin:6px 0 0;color:var(--muted);font-size:.88rem}
+.gal-close{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:1.1rem;cursor:pointer}
+.gal-close:hover{border-color:var(--accent);color:var(--accent)}
+.gal-body{position:relative;margin-top:20px}
+.track{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:22px;padding:6px 22px 10px;scrollbar-width:none;scroll-behavior:smooth}
+.track::-webkit-scrollbar{display:none}
+.person-card{flex:0 0 auto;width:176px;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:18px 12px 16px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
+.person-card .av{width:132px;height:132px;font-size:2.4rem;box-shadow:0 0 0 4px var(--surface),0 0 0 5.5px var(--card-line)}
+.person-name{font-weight:700;font-size:.95rem;line-height:1.25;text-wrap:balance}
+.person-tools{display:flex;flex-wrap:wrap;justify-content:center;gap:4px}
+.person-tools .btn{padding:4px 10px;font-size:.74rem}
+.arrow{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:0 4px 14px var(--shadow);z-index:2}
+.arrow:hover{border-color:var(--accent);color:var(--accent)}
+.arrow.prev{left:8px}.arrow.next{right:8px}
+.gal-empty{margin:0 22px;padding:28px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:10px}
+.gal-hint{margin:14px 22px 0;font-size:var(--small);color:var(--muted)}
+
+/* Subir fotos en lote */
+.up-list{display:flex;flex-direction:column;gap:8px}
+.up-row{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.up-row .av{width:56px;height:56px;font-size:1rem}
+.up-row input{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);width:100%;min-width:0}
+.up-meta{font-size:.72rem;color:var(--muted);margin-top:3px}
+.up-row.ok{border-color:var(--green)}
+.up-row.fail{border-color:var(--danger)}
+.drop{display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px;border:2px dashed var(--card-line);border-radius:12px;text-align:center;color:var(--muted);cursor:pointer}
+.drop:hover,.drop.over{border-color:var(--accent);color:var(--ink);background:var(--accent-soft)}
+.drop strong{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.track{scroll-behavior:auto}.av.loading{animation:none}}
+
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:.88rem;z-index:40;box-shadow:0 6px 20px rgba(0,0,0,.2)}
 @media (prefers-reduced-motion:no-preference){.panel{animation:slide .22s ease-out}@keyframes slide{from{transform:translateX(30px);opacity:.6}to{transform:none;opacity:1}}}
 </style>
 </head>
@@ -153,6 +203,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
       <label class="toggle"><input type="checkbox" id="onlyContact"> Solo con contacto</label>
       <button class="btn primary" id="addBtn" type="button" hidden>+ Agregar programa</button>
       <button class="btn" id="unlockBtn" type="button" hidden>Editar agenda</button>
+      <button class="btn" id="photosBtn" type="button" hidden>Subir fotos</button>
       <button class="btn ghost" id="lockBtn" type="button" hidden>Salir de edición</button>
     </div>
     <form class="keybox" id="keybox" hidden>
@@ -216,6 +267,45 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
   </form>
 </div>
 
+<div class="gal-overlay" id="gallery" hidden>
+  <div class="gal" role="dialog" aria-modal="true" aria-labelledby="galTitle">
+    <div class="gal-head">
+      <div>
+        <div class="gal-kicker" id="galKicker"></div>
+        <h3 class="gal-title" id="galTitle"></h3>
+        <p class="gal-sub" id="galSub"></p>
+      </div>
+      <button type="button" class="gal-close" id="galClose" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="gal-body">
+      <button type="button" class="arrow prev" id="galPrev" aria-label="Anteriores" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+      <div class="track" id="galTrack"></div>
+      <button type="button" class="arrow next" id="galNext" aria-label="Siguientes" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+    </div>
+    <p class="gal-hint" id="galHint" hidden></p>
+  </div>
+</div>
+<input type="file" id="oneFile" accept="image/jpeg,image/png,image/webp" hidden>
+
+<div class="overlay" id="uploader" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="upTitle">
+    <h3 id="upTitle">Subir fotos</h3>
+    <p class="field hint" style="margin:0">Elegí una o varias fotos. Si el archivo se llama como la persona (por ejemplo <b>Mauro Szeta.jpg</b>), el nombre se completa solo. Las fotos se recortan en cuadrado y se achican antes de subirse.</p>
+    <label class="drop" id="drop" for="manyFiles">
+      <strong>Elegir fotos</strong>
+      <span>o arrastralas acá · JPG, PNG o WEBP</span>
+    </label>
+    <input type="file" id="manyFiles" accept="image/jpeg,image/png,image/webp" multiple hidden>
+    <datalist id="personas"></datalist>
+    <div class="up-list" id="upList"></div>
+    <p class="err" id="upErr" hidden></p>
+    <div class="panel-foot">
+      <button type="button" class="btn" id="upCancel">Cerrar</button>
+      <button type="button" class="btn primary" id="upSave" disabled>Guardar fotos</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" hidden></div>
 
 
@@ -230,7 +320,9 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 <script>
 (function(){
   const $ = s => document.querySelector(s);
-  const state = { items: [], q: "", canal: "all", onlyContact: false, editing: null, confirmId: null, loaded: false, error: "", edit: false };
+  const state = { items: [], q: "", canal: "all", onlyContact: false, editing: null, confirmId: null, loaded: false, error: "", edit: false, conFoto: new Set(), galleryId: null };
+  const fotos = {};          // clave → foto ya descargada
+  const pidiendo = new Set(); // claves que se están descargando
   const LS = "agenda_streams_clave";
   let key = "";
   try{ key = localStorage.getItem(LS) || ""; }catch(e){}
@@ -266,6 +358,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
     try{
       const j = await apiGet();
       state.items = j.items || []; state.loaded = true; state.error = "";
+      state.conFoto = new Set(j.conFoto || []);
+      Object.keys(fotos).forEach(k => { if(!state.conFoto.has(k)) delete fotos[k]; });
     }catch(e){
       if(!state.loaded) state.error = e.message || "No se pudo cargar la agenda.";
     }
@@ -277,6 +371,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
     state.edit = on;
     $("#addBtn").hidden = !on;
     $("#lockBtn").hidden = !on;
+    $("#photosBtn").hidden = !on;
+    if(state.galleryId) renderGallery();
     $("#unlockBtn").hidden = on || !configured;
     $("#keybox").hidden = true;
     if(!on) state.confirmId = null;
@@ -342,8 +438,11 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
         ? `<span class="confirm">¿Eliminar este programa? <button type="button" class="btn ghost danger" data-del="${esc(it.id)}">Sí, eliminar</button><button type="button" class="btn ghost" data-nodel="1">No</button></span>`
         : `<button type="button" class="btn act" data-edit="${esc(it.id)}">Editar</button><button type="button" class="btn act" data-askdel="${esc(it.id)}">Eliminar</button>`;
     }
-    return `<article class="item">
-      <div class="main-col"><h3 class="prog">${esc(it.programa)}</h3>${it.horario?`<div class="hora">${esc(it.horario)}</div>`:""}${it.conductores?`<p class="cond">${esc(it.conductores)}</p>`:`<p class="cond empty">Conductores sin cargar</p>`}${it.descripcion?`<p class="desc">${esc(it.descripcion)}</p>`:""}${temas?`<div class="tags">${temas}</div>`:""}${actions?`<div class="actions">${actions}</div>`:""}</div>
+    const gente = integrantes(it);
+    const caras = gente.slice(0,4).map(n => avatarHTML(n, false)).join("");
+    const see = gente.length ? `<span class="see"><span class="faces">${caras}</span>Ver integrantes (${gente.length})</span>` : "";
+    return `<article class="item" data-id="${esc(it.id)}" tabindex="0" aria-label="${esc(it.programa)}: ver integrantes">
+      <div class="main-col"><h3 class="prog">${esc(it.programa)}</h3>${it.horario?`<div class="hora">${esc(it.horario)}</div>`:""}${it.conductores?`<p class="cond">${esc(it.conductores)}</p>`:`<p class="cond empty">Conductores sin cargar</p>`}${it.descripcion?`<p class="desc">${esc(it.descripcion)}</p>`:""}${temas?`<div class="tags">${temas}</div>`:""}${see}${actions?`<div class="actions">${actions}</div>`:""}</div>
       <div class="contact">${contactHTML}</div>
     </article>`;
   }
@@ -398,7 +497,12 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
   $("#cancelBtn").onclick = closeForm;
   $("#addContact").onclick = () => $("#contactRows").appendChild(contactRow());
   $("#overlay").addEventListener("click", e => { if(e.target.id==="overlay") closeForm(); });
-  document.addEventListener("keydown", e => { if(e.key==="Escape" && !$("#overlay").hidden) closeForm(); });
+  document.addEventListener("keydown", e => {
+    if(e.key!=="Escape") return;
+    if(!$("#overlay").hidden) closeForm();
+    else if(!$("#uploader").hidden) closeUploader();
+    else if(state.galleryId) closeGallery();
+  });
 
   $("#form").addEventListener("submit", async e => {
     e.preventDefault();
@@ -426,11 +530,19 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
   });
 
   /* ---------- Lista ---------- */
+  $("#main").addEventListener("keydown", e => {
+    if((e.key === "Enter" || e.key === " ") && e.target.classList && e.target.classList.contains("item")){ e.preventDefault(); openGallery(e.target.dataset.id); }
+  });
   $("#q").addEventListener("input", e => { state.q = e.target.value; render(); });
   $("#onlyContact").addEventListener("change", e => { state.onlyContact = e.target.checked; render(); });
   $("#chips").addEventListener("click", e => { const b=e.target.closest("[data-canal]"); if(!b) return; state.canal=b.dataset.canal; render(); });
   $("#main").addEventListener("click", async e => {
-    const t = e.target.closest("button"); if(!t) return;
+    const t = e.target.closest("button");
+    if(!t){
+      const card = e.target.closest(".item");
+      if(card && !String(getSelection()).trim()) openGallery(card.dataset.id);
+      return;
+    }
     const d = t.dataset;
     if(d.copy){
       const v = d.copy.replace(/\D/g,"") || d.copy;
@@ -446,6 +558,221 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
     }
   });
 
+  /* ---------- Integrantes y fotos ---------- */
+  // Misma regla que usa la planilla para reconocer a cada persona.
+  const claveNombre = n => String(n==null?"":n).replace(/[|\n]/g," ").normalize("NFD").replace(/[̀-ͯ]/g,"")
+    .toLowerCase().replace(/["“”'‘’]/g,"").replace(/\s+/g," ").trim();
+  function integrantes(it){
+    const vistos = new Set();
+    return String(it.conductores||"").split(/,|\s+y\s+/i).map(s=>s.trim().replace(/\.$/,""))
+      .filter(s => s && !/^(el\s+)?equipo$/i.test(s))
+      .filter(s => { const k=claveNombre(s); if(!k || vistos.has(k)) return false; vistos.add(k); return true; });
+  }
+  function iniciales(n){
+    const p = String(n).replace(/["“”].*?["“”]/g," ").trim().split(/\s+/).filter(Boolean);
+    return ((p[0]||"?")[0] + (p.length>1 ? p[p.length-1][0] : "")).toUpperCase();
+  }
+  function avatarHTML(nombre, grande){
+    const k = claveNombre(nombre);
+    if(fotos[k]) return `<span class="av"><img src="${fotos[k]}" alt="${esc(nombre)}" loading="lazy"></span>`;
+    if(state.conFoto.has(k) && pidiendo.has(k)) return `<span class="av loading" aria-hidden="true"></span>`;
+    return `<span class="av" aria-hidden="true">${esc(iniciales(nombre))}</span>`;
+  }
+
+  async function traerFotos(nombres){
+    const faltan = nombres.map(claveNombre).filter(k => state.conFoto.has(k) && !fotos[k] && !pidiendo.has(k));
+    if(!faltan.length) return;
+    faltan.forEach(k => pidiendo.add(k));
+    if(state.galleryId) renderGallery();
+    try{
+      for(let i=0; i<faltan.length; i+=20){
+        const lote = faltan.slice(i, i+20);
+        const r = await fetch(API_URL.trim() + "?action=fotos&nombres=" + encodeURIComponent(JSON.stringify(lote)) + "&_=" + Date.now(), { cache: "no-store" });
+        const j = await r.json();
+        if(j.ok) Object.keys(j.fotos||{}).forEach(k => { fotos[k] = j.fotos[k].foto; });
+      }
+    }catch(e){ toast("No se pudieron cargar algunas fotos"); }
+    finally{ faltan.forEach(k => pidiendo.delete(k)); }
+    if(state.galleryId) renderGallery();
+    render();
+  }
+
+  // Recorta en cuadrado, achica y comprime la foto en el navegador antes de subirla.
+  async function comprimir(file){
+    if(!/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error("Formato no compatible. Usá JPG, PNG o WEBP.");
+    const url = URL.createObjectURL(file);
+    try{
+      const img = await new Promise((ok, mal) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => mal(new Error("No se pudo abrir la imagen.")); i.src = url; });
+      const w = img.naturalWidth, h = img.naturalHeight, lado = Math.min(w, h);
+      if(!lado) throw new Error("No se pudo abrir la imagen.");
+      const sx = (w - lado) / 2;
+      const sy = h > w ? (h - lado) * 0.2 : (h - lado) / 2; // en fotos verticales prioriza la cara
+      for(const tam of [320, 260, 200]){
+        const c = document.createElement("canvas");
+        c.width = c.height = Math.min(tam, lado);
+        const ctx = c.getContext("2d");
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, c.width, c.height);
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(img, sx, sy, lado, lado, 0, 0, c.width, c.height);
+        for(let q = 0.84; q >= 0.5; q -= 0.08){
+          const out = c.toDataURL("image/jpeg", q);
+          if(out.length <= 40000) return out;
+        }
+      }
+      throw new Error("La imagen no se pudo achicar lo suficiente.");
+    } finally { URL.revokeObjectURL(url); }
+  }
+  const pesoKB = dataUrl => Math.round(dataUrl.length * 0.75 / 1024);
+
+  async function guardarFoto(nombre, foto){
+    await apiPost({ action: "foto_set", nombre, foto });
+    const k = claveNombre(nombre);
+    fotos[k] = foto; state.conFoto.add(k);
+  }
+
+  /* ---------- Galería ---------- */
+  function openGallery(id){
+    const it = state.items.find(i => i.id === id); if(!it) return;
+    state.galleryId = id;
+    $("#gallery").hidden = false;
+    document.documentElement.style.overflow = "hidden";
+    $("#galTrack").scrollLeft = 0;
+    renderGallery();
+    traerFotos(integrantes(it));
+    setTimeout(() => $("#galClose").focus(), 30);
+  }
+  function closeGallery(){
+    const id = state.galleryId;
+    state.galleryId = null; $("#gallery").hidden = true;
+    document.documentElement.style.overflow = "";
+    const card = id && document.querySelector(`.item[data-id="${CSS.escape(id)}"]`); if(card) card.focus();
+  }
+  function renderGallery(){
+    const it = state.items.find(i => i.id === state.galleryId);
+    if(!it){ closeGallery(); return; }
+    const gente = integrantes(it);
+    $("#galKicker").textContent = it.canal + (it.horario ? " · " + it.horario : "");
+    $("#galTitle").textContent = it.programa;
+    $("#galSub").textContent = gente.length ? gente.length + (gente.length === 1 ? " integrante" : " integrantes") : "";
+    const track = $("#galTrack");
+    if(!gente.length){
+      track.innerHTML = `<div class="gal-empty">Este programa todavía no tiene conductores cargados.${state.edit ? " Agregalos con «Editar» en la tarjeta." : ""}</div>`;
+    } else {
+      track.innerHTML = gente.map(n => {
+        const k = claveNombre(n), tiene = state.conFoto.has(k);
+        const tools = state.edit ? `<div class="person-tools">
+            <button type="button" class="btn act" data-photo="${esc(n)}">${tiene ? "Cambiar foto" : "Subir foto"}</button>
+            ${tiene ? `<button type="button" class="btn ghost danger" data-unphoto="${esc(n)}">Quitar</button>` : ""}
+          </div>` : "";
+        return `<div class="person-card">${avatarHTML(n, true)}<div class="person-name">${esc(n)}</div>${tools}</div>`;
+      }).join("");
+    }
+    const hint = $("#galHint");
+    hint.hidden = !state.edit;
+    hint.textContent = "La foto de cada persona aparece en todos los programas donde figura su nombre en «Conductores».";
+    requestAnimationFrame(updateArrows);
+  }
+  function updateArrows(){
+    const t = $("#galTrack");
+    $("#galPrev").hidden = t.scrollLeft <= 4;
+    $("#galNext").hidden = t.scrollLeft + t.clientWidth >= t.scrollWidth - 4;
+  }
+  const paso = () => Math.max(194, $("#galTrack").clientWidth - 194);
+  $("#galPrev").onclick = () => $("#galTrack").scrollBy({ left: -paso() });
+  $("#galNext").onclick = () => $("#galTrack").scrollBy({ left: paso() });
+  $("#galTrack").addEventListener("scroll", updateArrows, { passive: true });
+  window.addEventListener("resize", () => { if(state.galleryId) updateArrows(); });
+  $("#galClose").onclick = closeGallery;
+  $("#gallery").addEventListener("click", e => { if(e.target.id === "gallery") closeGallery(); });
+
+  let fotoPara = null;
+  $("#galTrack").addEventListener("click", async e => {
+    const b = e.target.closest("button"); if(!b) return;
+    if(b.dataset.photo){ fotoPara = b.dataset.photo; $("#oneFile").value = ""; $("#oneFile").click(); }
+    else if(b.dataset.unphoto){
+      const n = b.dataset.unphoto; b.disabled = true;
+      try{ await apiPost({ action: "foto_delete", nombre: n }); const k = claveNombre(n); delete fotos[k]; state.conFoto.delete(k); toast("Foto quitada"); render(); }
+      catch(x){ toast(writeError(x)); }
+      renderGallery();
+    }
+  });
+  $("#oneFile").addEventListener("change", async e => {
+    const f = e.target.files[0]; if(!f || !fotoPara) return;
+    const n = fotoPara; fotoPara = null;
+    try{
+      toast("Subiendo foto…");
+      await guardarFoto(n, await comprimir(f));
+      toast("Foto guardada"); render();
+    }catch(x){ toast(writeError(x)); }
+    renderGallery();
+  });
+
+  /* ---------- Subir fotos en lote ---------- */
+  let cola = []; // { id, file, foto, nombre, estado }
+  function nombreDesdeArchivo(fn){
+    const base = fn.replace(/\.[^.]+$/, "").replace(/\s*\(\d+\)$/, "").replace(/[_\-.]+/g, " ").replace(/\s+\d+$/, "").trim();
+    const k = claveNombre(base);
+    const conocido = todasLasPersonas().find(p => claveNombre(p) === k);
+    return conocido || base;
+  }
+  function todasLasPersonas(){
+    const m = new Map();
+    state.items.forEach(it => integrantes(it).forEach(n => { const k = claveNombre(n); if(!m.has(k)) m.set(k, n); }));
+    return [...m.values()].sort((a,b) => a.localeCompare(b, "es"));
+  }
+  function openUploader(){
+    cola = []; renderCola(); $("#upErr").hidden = true;
+    $("#personas").innerHTML = todasLasPersonas().map(n => `<option value="${esc(n)}">`).join("");
+    $("#uploader").hidden = false; document.documentElement.style.overflow = "hidden";
+  }
+  function closeUploader(){ $("#uploader").hidden = true; document.documentElement.style.overflow = ""; cola = []; }
+  function renderCola(){
+    $("#upList").innerHTML = cola.map(c => `<div class="up-row ${c.estado==="ok"?"ok":c.estado==="error"?"fail":""}" data-q="${c.id}">
+        <span class="av ${c.foto?"":"loading"}">${c.foto?`<img src="${c.foto}" alt="">`:""}</span>
+        <div><input list="personas" value="${esc(c.nombre)}" aria-label="Nombre de la persona" data-name="${c.id}" ${c.estado==="ok"?"disabled":""}>
+          <div class="up-meta">${c.estado==="ok" ? "Guardada" : c.estado==="error" ? esc(c.error) : c.estado==="subiendo" ? "Subiendo…" : c.foto ? pesoKB(c.foto)+" KB · "+(state.conFoto.has(claveNombre(c.nombre))?"reemplaza la foto actual":"foto nueva") : "Preparando…"}</div></div>
+        <button type="button" class="btn ghost" data-quitar="${c.id}" aria-label="Quitar de la lista" ${c.estado==="subiendo"?"disabled":""}>✕</button>
+      </div>`).join("");
+    const listas = cola.filter(c => c.foto && c.estado !== "ok" && c.estado !== "subiendo");
+    $("#upSave").disabled = !listas.length;
+    $("#upSave").textContent = listas.length ? `Guardar ${listas.length} ${listas.length===1?"foto":"fotos"}` : "Guardar fotos";
+  }
+  async function agregarArchivos(files){
+    const nuevos = [...files].map((file, i) => ({ id: "q" + Date.now() + i, file, foto: "", nombre: nombreDesdeArchivo(file.name), estado: "" }));
+    cola = cola.concat(nuevos); renderCola();
+    for(const c of nuevos){
+      try{ c.foto = await comprimir(c.file); }catch(x){ c.estado = "error"; c.error = x.message; }
+      renderCola();
+    }
+  }
+  $("#photosBtn").onclick = openUploader;
+  $("#upCancel").onclick = closeUploader;
+  $("#uploader").addEventListener("click", e => { if(e.target.id === "uploader") closeUploader(); });
+  $("#manyFiles").addEventListener("change", e => { agregarArchivos(e.target.files); e.target.value = ""; });
+  const drop = $("#drop");
+  ["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", e => { if(e.dataTransfer && e.dataTransfer.files.length) agregarArchivos(e.dataTransfer.files); });
+  $("#upList").addEventListener("input", e => { const id = e.target.dataset.name; const c = cola.find(x => x.id === id); if(c){ c.nombre = e.target.value; } });
+  $("#upList").addEventListener("change", e => { if(e.target.dataset.name) renderCola(); });
+  $("#upList").addEventListener("click", e => { const b = e.target.closest("[data-quitar]"); if(!b) return; cola = cola.filter(c => c.id !== b.dataset.quitar); renderCola(); });
+  $("#upSave").onclick = async () => {
+    const err = $("#upErr"); err.hidden = true;
+    const listas = cola.filter(c => c.foto && c.estado !== "ok");
+    if(listas.some(c => !claveNombre(c.nombre))){ err.textContent = "Completá el nombre de todas las fotos."; err.hidden = false; return; }
+    let hechas = 0, fallas = 0;
+    $("#upSave").disabled = true;
+    for(const c of listas){
+      c.estado = "subiendo"; renderCola();
+      $("#upSave").textContent = `Subiendo ${hechas + fallas + 1} de ${listas.length}…`;
+      try{ await guardarFoto(c.nombre.trim(), c.foto); c.estado = "ok"; hechas++; }
+      catch(x){ c.estado = "error"; c.error = writeError(x); fallas++; if(x.code === "clave") break; }
+      renderCola();
+    }
+    render();
+    toast(fallas ? `Se guardaron ${hechas} fotos. ${fallas} no se pudieron guardar.` : `${hechas} ${hechas===1?"foto guardada":"fotos guardadas"}`);
+  };
+
   /* ---------- Inicio ---------- */
   render();
   if(configured){
@@ -453,7 +780,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
     if(key){ apiPost({ action: "check" }).then(()=>setEdit(true)).catch(()=>{ dropKey(); setEdit(false); }); }
     else setEdit(false);
     // Trae los cambios de los demás cada 30 segundos, sin interrumpir a quien está editando.
-    setInterval(() => { if(document.visibilityState==="visible" && $("#overlay").hidden && !state.confirmId) load(); }, 30000);
+    setInterval(() => { if(document.visibilityState==="visible" && $("#overlay").hidden && $("#uploader").hidden && !state.confirmId) load(); }, 30000);
   }
 })();
 </script>
