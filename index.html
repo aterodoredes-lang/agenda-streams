@@ -71,10 +71,15 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 .canal h2{font-family:var(--font-display);font-size:var(--h2);font-weight:800;font-stretch:80%;text-transform:uppercase;letter-spacing:.03em;margin:0;display:flex;align-items:baseline;gap:10px}
 .canal h2 .n{font-family:var(--font-mono);font-size:var(--small);font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0}
 .list{display:flex;flex-direction:column;gap:12px}
-.item{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,1fr);gap:8px 24px;padding:16px 18px;background:var(--surface);border:1.5px solid var(--card-line);border-radius:10px;box-shadow:0 3px 0 var(--card-depth),0 8px 20px var(--shadow);transition:transform .15s,box-shadow .15s,border-color .15s}
+.item{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);gap:12px 32px;text-align:left;padding:16px 18px;background:var(--surface);border:1.5px solid var(--card-line);border-radius:10px;box-shadow:0 3px 0 var(--card-depth),0 8px 20px var(--shadow);transition:transform .15s,box-shadow .15s,border-color .15s}
 .item:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 5px 0 var(--card-depth),0 12px 26px var(--shadow)}
 @media (prefers-reduced-motion:reduce){.item,.item:hover{transition:none;transform:none}}
-@media (max-width:860px){.item{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){.item{grid-template-columns:minmax(0,1fr)}}
+.main-col{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0}
+.main-col .cond{margin-top:4px}
+.main-col .tags{margin-top:2px}
+.main-col .actions{margin-top:6px}
+@media (min-width:761px){.contact{border-left:1px solid var(--line);padding-left:20px}}
 .prog{font-family:var(--font-display);font-weight:700;font-size:1.08rem;line-height:1.25;margin:0;text-wrap:balance}
 .hora{font-family:var(--font-mono);font-size:var(--small);color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
 .cond{margin:0;color:var(--ink)}
@@ -338,8 +343,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
         : `<button type="button" class="btn act" data-edit="${esc(it.id)}">Editar</button><button type="button" class="btn act" data-askdel="${esc(it.id)}">Eliminar</button>`;
     }
     return `<article class="item">
-      <div><h3 class="prog">${esc(it.programa)}</h3>${it.horario?`<div class="hora">${esc(it.horario)}</div>`:""}${actions?`<div class="actions">${actions}</div>`:""}</div>
-      <div>${it.conductores?`<p class="cond">${esc(it.conductores)}</p>`:`<p class="cond empty">Conductores sin cargar</p>`}${it.descripcion?`<p class="desc">${esc(it.descripcion)}</p>`:""}${temas?`<div class="tags">${temas}</div>`:""}</div>
+      <div class="main-col"><h3 class="prog">${esc(it.programa)}</h3>${it.horario?`<div class="hora">${esc(it.horario)}</div>`:""}${it.conductores?`<p class="cond">${esc(it.conductores)}</p>`:`<p class="cond empty">Conductores sin cargar</p>`}${it.descripcion?`<p class="desc">${esc(it.descripcion)}</p>`:""}${temas?`<div class="tags">${temas}</div>`:""}${actions?`<div class="actions">${actions}</div>`:""}</div>
       <div class="contact">${contactHTML}</div>
     </article>`;
   }
