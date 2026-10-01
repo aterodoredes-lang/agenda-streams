@@ -95,6 +95,11 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 .tel{font-family:var(--font-mono);font-size:.85rem;font-variant-numeric:tabular-nums;background:none;border:1px dashed var(--line);border-radius:5px;padding:1px 7px;color:var(--ink);cursor:pointer;user-select:all}
 .tel:hover{border-color:var(--accent);color:var(--accent)}
 .nocontact{font-size:var(--small);color:var(--muted)}
+.yt{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;margin-top:6px;padding:7px 12px;border-radius:8px;border:1px solid var(--card-line);background:var(--surface);color:var(--ink);font-size:.84rem;font-weight:600;text-decoration:none;transition:border-color .15s,background-color .15s,color .15s}
+.yt:hover{border-color:#ff0033;background:color-mix(in srgb,#ff0033 10%,var(--surface))}
+.yt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.yt-ico{flex:none}
+.gal-links{margin-top:10px}
 .actions{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;align-items:center}
 .btn.act{background:var(--green-soft);border-color:color-mix(in srgb,var(--green) 45%,transparent);color:var(--green);font-weight:600;padding:5px 12px;font-size:var(--small);transition:background-color .15s,color .15s}
 .btn.act:hover{background:var(--green);border-color:var(--green);color:var(--green-ink)}
@@ -284,6 +289,11 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
       <textarea id="f-desc" placeholder="Descripción, perfil del programa, observaciones"></textarea>
     </div>
     <div class="field">
+      <label for="f-yt">Link de YouTube</label>
+      <input id="f-yt" type="url" inputmode="url" placeholder="https://www.youtube.com/@canal">
+      <span class="hint">Del canal o del programa. Pegá la dirección tal como aparece en el navegador.</span>
+    </div>
+    <div class="field">
       <span class="fieldset-title">Contactos</span>
       <div id="contactRows" style="display:flex;flex-direction:column;gap:6px"></div>
       <div><button type="button" class="btn ghost" id="addContact">+ Agregar contacto</button></div>
@@ -303,6 +313,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
         <div class="gal-kicker" id="galKicker"></div>
         <h3 class="gal-title" id="galTitle"></h3>
         <p class="gal-sub" id="galSub"></p>
+        <div class="gal-links" id="galLinks"></div>
       </div>
       <button type="button" class="gal-close" id="galClose" aria-label="Cerrar">✕</button>
     </div>
@@ -383,6 +394,9 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
   const norm = s => (s||"").toString().normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
   const esc = s => (s==null?"":String(s)).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const fmtTel = t => { const d=(t||"").replace(/\D/g,""); if(d.length===10&&d.startsWith("11")) return "11 "+d.slice(2,6)+"-"+d.slice(6); return t||""; };
+  const linkOk = u => /^https?:\/\/[^\s"'<>]+\.[^\s"'<>]+$/i.test(u || "");
+  const YT_ICO = '<svg class="yt-ico" width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><rect width="20" height="14" rx="4" fill="#ff0033"/><path d="M8 4v6l5.2-3z" fill="#fff"/></svg>';
+  const ytHTML = it => linkOk(it.youtube) ? `<a class="yt" href="${esc(it.youtube)}" target="_blank" rel="noopener noreferrer">${YT_ICO}Ver en YouTube</a>` : "";
   const contactos = it => Array.isArray(it.contactos) ? it.contactos.filter(c => c && (c.nombre||c.tel)) : [];
 
   let toastT;
@@ -496,7 +510,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
     const see = gente.length ? `<span class="see"><span class="faces">${caras}</span>Ver integrantes (${gente.length})</span>` : "";
     return `<article class="item" data-id="${esc(it.id)}" tabindex="0" aria-label="${esc(it.programa)}: ver integrantes">
       <div class="main-col"><h3 class="prog">${esc(it.programa)}</h3>${it.horario?`<div class="hora">${esc(it.horario)}</div>`:""}${it.conductores?`<p class="cond">${esc(it.conductores)}</p>`:`<p class="cond empty">Conductores sin cargar</p>`}${it.descripcion?`<p class="desc">${esc(it.descripcion)}</p>`:""}${temas?`<div class="tags">${temas}</div>`:""}${see}${actions?`<div class="actions">${actions}</div>`:""}</div>
-      <div class="contact">${contactHTML}</div>
+      <div class="contact">${contactHTML}${ytHTML(it)}</div>
     </article>`;
   }
   const box = (t,s) => `<div class="state"><strong>${t}</strong>${s}</div>`;
@@ -536,6 +550,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
     $("#f-cond").value = it?.conductores || "";
     $("#f-temas").value = (it?.temas||[]).join(", ");
     $("#f-desc").value = it?.descripcion || "";
+    $("#f-yt").value = it?.youtube || "";
     const rows = $("#contactRows"); rows.innerHTML="";
     const cs = it ? contactos(it) : [];
     (cs.length?cs:[{}]).forEach(c => rows.appendChild(contactRow(c)));
@@ -568,6 +583,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
       conductores: $("#f-cond").value.trim(),
       temas: $("#f-temas").value.split(/[,/]+/).map(s=>s.trim()).filter(Boolean),
       descripcion: $("#f-desc").value.trim(),
+      youtube: $("#f-yt").value.trim(),
       contactos: [...document.querySelectorAll("#contactRows .crow")].map(r => ({
         nombre: r.querySelector(".c-n").value.trim(), rol: r.querySelector(".c-r").value.trim(), tel: r.querySelector(".c-t").value.trim()
       })).filter(c => c.nombre || c.tel)
@@ -592,6 +608,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
   $("#main").addEventListener("click", async e => {
     const t = e.target.closest("button");
     if(!t){
+      if(e.target.closest("a")) return;
       const card = e.target.closest(".item");
       if(card && !String(getSelection()).trim()) openGallery(card.dataset.id);
       return;
@@ -800,6 +817,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
     const gente = integrantes(it);
     $("#galKicker").textContent = it.canal + (it.horario ? " · " + it.horario : "");
     $("#galTitle").textContent = it.programa;
+    $("#galLinks").innerHTML = ytHTML(it);
     $("#galSub").textContent = gente.length ? gente.length + (gente.length === 1 ? " integrante" : " integrantes") : "";
     const track = $("#galTrack");
     if(!gente.length){
