@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Agenda de Streams</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: directorio de prensa — barra de búsqueda y filtros arriba, programas agrupados por canal como fichas en fila */
+:root{
+  --bg:#f3f4f7; --surface:#ffffff; --ink:#151a2b; --muted:#5b6377; --line:#dde0e8; --card-line:#b7c0dc; --card-depth:#cdd3e6; --shadow:rgba(21,26,43,.10);
+  --accent:#2a44c9; --accent-ink:#ffffff; --accent-soft:#e6eafb; --live:#d6332b; --danger:#b42318; --green:#2e9a5a; --green-soft:#e2f4e9; --green-ink:#ffffff;
+  --font-display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --font-body:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --h1:clamp(1.9rem,4.5vw,2.8rem); --h2:1.15rem; --base:0.95rem; --small:0.8rem;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1220; --surface:#171b2c; --ink:#e8eaf3; --muted:#9aa2b8; --line:#2a3046; --card-line:#3d4768; --card-depth:#0a0d18; --shadow:rgba(0,0,0,.45);
+  --accent:#8fa2ff; --accent-ink:#0f1220; --accent-soft:#232a4a; --live:#ff6b62; --danger:#ff8a80; --green:#5ccf8a; --green-soft:#173a2a; --green-ink:#0f1220; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1220; --surface:#171b2c; --ink:#e8eaf3; --muted:#9aa2b8; --line:#2a3046; --card-line:#3d4768; --card-depth:#0a0d18; --shadow:rgba(0,0,0,.45);
+  --accent:#8fa2ff; --accent-ink:#0f1220; --accent-soft:#232a4a; --live:#ff6b62; --danger:#ff8a80; --green:#5ccf8a; --green-soft:#173a2a; --green-ink:#0f1220; color-scheme:dark}
+
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:var(--base);line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 64px;display:flex;flex-direction:column;gap:22px}
+@media (min-width:720px){.wrap{padding-inline:28px}}
+
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.eyebrow{font-family:var(--font-mono);font-size:var(--small);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+.eyebrow .dot{position:relative;width:8px;height:8px;border-radius:50%;background:var(--live);box-shadow:0 0 6px color-mix(in srgb,var(--live) 70%,transparent)}
+.eyebrow .dot::after{content:"";position:absolute;inset:-3px;border-radius:50%;background:color-mix(in srgb,var(--live) 30%,transparent)}
+@media (prefers-reduced-motion:no-preference){.eyebrow .dot{animation:onair-glow 1.6s ease-in-out infinite}.eyebrow .dot::after{animation:onair-ring 1.6s ease-out infinite}}
+@keyframes onair-ring{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2.4);opacity:0}}
+@keyframes onair-glow{0%,100%{box-shadow:0 0 4px color-mix(in srgb,var(--live) 60%,transparent)}50%{box-shadow:0 0 10px var(--live)}}
+h1{font-family:var(--font-display);font-size:var(--h1);font-weight:800;font-stretch:72%;letter-spacing:-.01em;line-height:1;margin:6px 0 0;text-transform:uppercase;text-wrap:balance}
+.stats{display:flex;gap:20px;font-family:var(--font-mono);font-size:var(--small);color:var(--muted);font-variant-numeric:tabular-nums;flex-wrap:wrap}
+.stats b{display:block;font-family:var(--font-display);font-size:1.6rem;font-weight:700;font-stretch:80%;color:var(--ink);line-height:1.1}
+
+.toolbar{display:flex;flex-direction:column;gap:12px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;border-bottom:1px solid var(--line)}
+.row1{display:flex;gap:10px;flex-wrap:wrap}
+.search{flex:1 1 260px;min-width:0;position:relative}
+.search input{width:100%;font:inherit;padding:10px 12px 10px 36px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted)}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font:inherit;font-weight:600;border-radius:8px;padding:9px 14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted);padding:6px 8px;font-weight:500}
+.btn.ghost:hover{color:var(--ink);border-color:var(--line)}
+.btn.danger{color:var(--danger)}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:var(--small);color:var(--muted);cursor:pointer;user-select:none;padding:0 4px}
+.toggle input{accent-color:var(--accent);width:16px;height:16px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.chip{font:inherit;font-size:var(--small);font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:5px 12px;cursor:pointer;white-space:nowrap;display:inline-flex;gap:6px;align-items:center}
+.chip .n{font-family:var(--font-mono);font-weight:400;font-variant-numeric:tabular-nums}
+.chip{transition:background-color .15s,border-color .15s,color .15s}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.chip:hover,.chip[aria-pressed="true"]:hover{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+.canal{display:flex;flex-direction:column;gap:8px}
+.canal h2{font-family:var(--font-display);font-size:var(--h2);font-weight:800;font-stretch:80%;text-transform:uppercase;letter-spacing:.03em;margin:0;display:flex;align-items:baseline;gap:10px}
+.canal h2 .n{font-family:var(--font-mono);font-size:var(--small);font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0}
+.list{display:flex;flex-direction:column;gap:12px}
+.item{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,1fr);gap:8px 24px;padding:16px 18px;background:var(--surface);border:1.5px solid var(--card-line);border-radius:10px;box-shadow:0 3px 0 var(--card-depth),0 8px 20px var(--shadow);transition:transform .15s,box-shadow .15s,border-color .15s}
+.item:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 5px 0 var(--card-depth),0 12px 26px var(--shadow)}
+@media (prefers-reduced-motion:reduce){.item,.item:hover{transition:none;transform:none}}
+@media (max-width:860px){.item{grid-template-columns:minmax(0,1fr)}}
+.prog{font-family:var(--font-display);font-weight:700;font-size:1.08rem;line-height:1.25;margin:0;text-wrap:balance}
+.hora{font-family:var(--font-mono);font-size:var(--small);color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
+.cond{margin:0;color:var(--ink)}
+.cond.empty{color:var(--muted);font-style:italic}
+.desc{margin:6px 0 0;color:var(--muted);font-size:.88rem;max-width:65ch}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.tag{font-size:.74rem;font-weight:500;padding:2px 8px;border-radius:4px;background:var(--accent-soft);color:var(--ink)}
+.contact{display:flex;flex-direction:column;gap:6px;min-width:0}
+.c-label{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.person{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;font-size:.88rem}
+.person .who{font-weight:600}
+.person .rol{color:var(--muted);font-size:var(--small)}
+.tel{font-family:var(--font-mono);font-size:.85rem;font-variant-numeric:tabular-nums;background:none;border:1px dashed var(--line);border-radius:5px;padding:1px 7px;color:var(--ink);cursor:pointer;user-select:all}
+.tel:hover{border-color:var(--accent);color:var(--accent)}
+.nocontact{font-size:var(--small);color:var(--muted)}
+.actions{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;align-items:center}
+.btn.act{background:var(--green-soft);border-color:color-mix(in srgb,var(--green) 45%,transparent);color:var(--green);font-weight:600;padding:5px 12px;font-size:var(--small);transition:background-color .15s,color .15s}
+.btn.act:hover{background:var(--green);border-color:var(--green);color:var(--green-ink)}
+.keybox{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 14px;border-radius:8px;background:var(--accent-soft);margin:0}
+.keybox label{font-size:var(--small);font-weight:600}
+.keybox input{flex:1 1 180px;min-width:0;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink)}
+.notice{font-size:.88rem;padding:10px 14px;border-radius:8px;background:var(--accent-soft);color:var(--ink);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
+.notice b{font-weight:700}
+.confirm{font-size:var(--small);color:var(--danger);display:inline-flex;gap:6px;align-items:center}
+
+.state{padding:48px 20px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:10px;background:var(--surface)}
+.state strong{display:block;color:var(--ink);font-family:var(--font-display);font-size:1.2rem;margin-bottom:6px}
+
+/* Panel del formulario */
+.overlay{position:fixed;inset:0;background:color-mix(in srgb,var(--ink) 45%,transparent);z-index:20;display:flex;justify-content:flex-end}
+.panel{background:var(--surface);width:min(520px,100%);height:100%;overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 22px) 20px calc(env(safe-area-inset-bottom,0px) + 22px);display:flex;flex-direction:column;gap:16px;box-shadow:-10px 0 30px rgba(0,0,0,.18)}
+.panel h3{font-family:var(--font-display);font-weight:800;font-stretch:78%;text-transform:uppercase;font-size:1.5rem;margin:0}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label,.fieldset-title{font-size:var(--small);font-weight:600;color:var(--muted)}
+.field .hint{font-size:.74rem;color:var(--muted)}
+.field input,.field textarea{font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);width:100%}
+.field textarea{min-height:70px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:460px){.two{grid-template-columns:1fr}}
+.crow{display:grid;grid-template-columns:1.3fr 1fr 1.1fr auto;gap:6px;align-items:center}
+.crow input{font:inherit;font-size:.88rem;padding:8px 9px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);width:100%;min-width:0}
+@media (max-width:460px){.crow{grid-template-columns:1fr 1fr;}.crow .tel-in{grid-column:1}}
+.panel-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:auto;padding-top:8px;border-top:1px solid var(--line)}
+.err{color:var(--danger);font-size:var(--small)}
+
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:.88rem;z-index:30;box-shadow:0 6px 20px rgba(0,0,0,.2)}
+@media (prefers-reduced-motion:no-preference){.panel{animation:slide .22s ease-out}@keyframes slide{from{transform:translateX(30px);opacity:.6}to{transform:none;opacity:1}}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow"><span class="dot"></span>Directorio de prensa · streaming</div>
+      <h1>Agenda de Streams</h1>
+    </div>
+    <div class="stats" id="stats">
+      <div><b id="s-prog">–</b>programas</div>
+      <div><b id="s-canal">–</b>canales</div>
+      <div><b id="s-cont">–</b>con contacto</div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="row1">
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <input id="q" type="search" placeholder="Buscar programa, conductor, tema o contacto" aria-label="Buscar">
+      </div>
+      <label class="toggle"><input type="checkbox" id="onlyContact"> Solo con contacto</label>
+      <button class="btn primary" id="addBtn" type="button" hidden>+ Agregar programa</button>
+      <button class="btn" id="unlockBtn" type="button" hidden>Editar agenda</button>
+      <button class="btn ghost" id="lockBtn" type="button" hidden>Salir de edición</button>
+    </div>
+    <form class="keybox" id="keybox" hidden>
+      <label for="keyInput">Clave de edición</label>
+      <input type="password" id="keyInput" autocomplete="current-password">
+      <button type="submit" class="btn primary">Entrar</button>
+      <button type="button" class="btn ghost" id="keyCancel">Cancelar</button>
+      <span class="err" id="keyErr" hidden></span>
+    </form>
+    <div class="chips" id="chips" role="group" aria-label="Filtrar por canal"></div>
+  </div>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <main id="main">
+    <div class="state"><strong>Cargando programas…</strong>Conectando con la agenda compartida.</div>
+  </main>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <form class="panel" id="form" novalidate>
+    <h3 id="formTitle">Nuevo programa</h3>
+    <div class="two">
+      <div class="field">
+        <label for="f-canal">Canal *</label>
+        <input id="f-canal" list="canales" required placeholder="Ej: Gelatina">
+        <datalist id="canales"></datalist>
+      </div>
+      <div class="field">
+        <label for="f-prog">Programa *</label>
+        <input id="f-prog" required placeholder="Ej: Industria Nacional">
+      </div>
+    </div>
+    <div class="field">
+      <label for="f-hora">Horario</label>
+      <input id="f-hora" placeholder="Ej: 10 AM a 12 PM · Lunes 7 a 8 PM">
+    </div>
+    <div class="field">
+      <label for="f-cond">Conductores / panel</label>
+      <textarea id="f-cond" placeholder="Separados por coma"></textarea>
+    </div>
+    <div class="field">
+      <label for="f-temas">Temas</label>
+      <input id="f-temas" placeholder="política, economía, humor">
+      <span class="hint">Separados por coma o barra (/)</span>
+    </div>
+    <div class="field">
+      <label for="f-desc">Notas</label>
+      <textarea id="f-desc" placeholder="Descripción, perfil del programa, observaciones"></textarea>
+    </div>
+    <div class="field">
+      <span class="fieldset-title">Contactos</span>
+      <div id="contactRows" style="display:flex;flex-direction:column;gap:6px"></div>
+      <div><button type="button" class="btn ghost" id="addContact">+ Agregar contacto</button></div>
+    </div>
+    <p class="err" id="formErr" hidden></p>
+    <div class="panel-foot">
+      <button type="button" class="btn" id="cancelBtn">Cancelar</button>
+      <button type="submit" class="btn primary" id="saveBtn">Guardar</button>
+    </div>
+  </form>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+
+<script>
+  /* ============================================================
+     ÚNICO CAMBIO: pegá entre las comillas la URL de la aplicación
+     web de tu planilla (la que termina en /exec).
+     ============================================================ */
+  const API_URL = "PEGAR-AQUI-LA-URL";
+</script>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const state = { items: [], q: "", canal: "all", onlyContact: false, editing: null, confirmId: null, loaded: false, error: "", edit: false };
+  const LS = "agenda_streams_clave";
+  let key = "";
+  try{ key = localStorage.getItem(LS) || ""; }catch(e){}
+  const configured = /^https:\/\/script\.google\.com\/.+\/exec$/.test(API_URL.trim());
+
+  const norm = s => (s||"").toString().normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+  const esc = s => (s==null?"":String(s)).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const fmtTel = t => { const d=(t||"").replace(/\D/g,""); if(d.length===10&&d.startsWith("11")) return "11 "+d.slice(2,6)+"-"+d.slice(6); return t||""; };
+  const contactos = it => Array.isArray(it.contactos) ? it.contactos.filter(c => c && (c.nombre||c.tel)) : [];
+
+  let toastT;
+  function toast(msg){ const t=$("#toast"); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,2400); }
+
+  /* ---------- Conexión con la planilla ---------- */
+  async function apiGet(){
+    const r = await fetch(API_URL.trim() + "?_=" + Date.now(), { cache: "no-store" });
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error || "No se pudo leer la planilla.");
+    return j;
+  }
+  async function apiPost(body){
+    let j;
+    try{
+      // text/plain evita el bloqueo entre sitios (CORS) que tiene Google Apps Script
+      const r = await fetch(API_URL.trim(), { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(Object.assign({ clave: key }, body)) });
+      j = await r.json();
+    }catch(e){ const x = new Error("No se pudo conectar con la planilla. Revisá tu conexión e intentá de nuevo."); throw x; }
+    if(!j.ok){ const x = new Error(j.error || "No se pudo guardar."); x.code = j.code; throw x; }
+    return j;
+  }
+
+  async function load(){
+    try{
+      const j = await apiGet();
+      state.items = j.items || []; state.loaded = true; state.error = "";
+    }catch(e){
+      if(!state.loaded) state.error = e.message || "No se pudo cargar la agenda.";
+    }
+    render();
+  }
+
+  /* ---------- Modo edición ---------- */
+  function setEdit(on){
+    state.edit = on;
+    $("#addBtn").hidden = !on;
+    $("#lockBtn").hidden = !on;
+    $("#unlockBtn").hidden = on || !configured;
+    $("#keybox").hidden = true;
+    if(!on) state.confirmId = null;
+    render();
+  }
+  function dropKey(){ key = ""; try{ localStorage.removeItem(LS); }catch(e){} }
+  function writeError(e){
+    if(e && e.code === "clave"){ dropKey(); setEdit(false); return "La clave de edición cambió. Tocá «Editar agenda» e ingresá la nueva."; }
+    return (e && e.message) || "No se pudo guardar.";
+  }
+
+  $("#unlockBtn").onclick = () => { $("#keybox").hidden = false; $("#keyErr").hidden = true; $("#keyInput").value = ""; $("#keyInput").focus(); };
+  $("#keyCancel").onclick = () => { $("#keybox").hidden = true; };
+  $("#lockBtn").onclick = () => { dropKey(); setEdit(false); toast("Saliste del modo edición"); };
+  $("#keybox").addEventListener("submit", async e => {
+    e.preventDefault();
+    const v = $("#keyInput").value.trim(), err = $("#keyErr");
+    if(!v){ err.textContent = "Escribí la clave."; err.hidden = false; return; }
+    key = v;
+    try{
+      await apiPost({ action: "check" });
+      try{ localStorage.setItem(LS, key); }catch(x){}
+      setEdit(true); toast("Modo edición activado");
+    }catch(x){ key = ""; err.textContent = x.message; err.hidden = false; }
+  });
+
+  /* ---------- Render ---------- */
+  function filtered(){
+    const q = norm(state.q).trim();
+    return state.items.filter(it => {
+      if(state.canal!=="all" && it.canal!==state.canal) return false;
+      if(state.onlyContact && !contactos(it).length) return false;
+      if(!q) return true;
+      const hay = norm([it.canal,it.programa,it.horario,it.conductores,(it.temas||[]).join(" "),it.descripcion,
+        contactos(it).map(c=>[c.nombre,c.rol,c.tel].join(" ")).join(" ")].join(" "));
+      return q.split(/\s+/).every(w => hay.includes(w));
+    });
+  }
+  function canales(){
+    const m = new Map();
+    state.items.forEach(it => m.set(it.canal, (m.get(it.canal)||0)+1));
+    return [...m.entries()].sort((a,b)=>a[0].localeCompare(b[0],"es"));
+  }
+  function renderTop(){
+    const cs = canales();
+    $("#s-prog").textContent = state.loaded ? state.items.length : "–";
+    $("#s-canal").textContent = state.loaded ? cs.length : "–";
+    $("#s-cont").textContent = state.loaded ? state.items.filter(i=>contactos(i).length).length : "–";
+    if(state.canal!=="all" && !cs.find(c=>c[0]===state.canal)) state.canal="all";
+    $("#chips").innerHTML = [`<button type="button" class="chip" data-canal="all" aria-pressed="${state.canal==="all"}">Todos <span class="n">${state.items.length}</span></button>`]
+      .concat(cs.map(([c,n]) => `<button type="button" class="chip" data-canal="${esc(c)}" aria-pressed="${state.canal===c}">${esc(c)} <span class="n">${n}</span></button>`)).join("");
+    $("#canales").innerHTML = cs.map(([c])=>`<option value="${esc(c)}">`).join("");
+  }
+  function itemHTML(it){
+    const cs = contactos(it);
+    const temas = (it.temas||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join("");
+    const contactHTML = `<span class="c-label">Contacto</span>` + (cs.length
+      ? cs.map(c => `<div class="person"><span class="who">${esc(c.nombre||"Sin nombre")}</span>${c.rol?`<span class="rol">${esc(c.rol)}</span>`:""}${c.tel?`<button type="button" class="tel" data-copy="${esc(c.tel)}" title="Copiar número">${esc(fmtTel(c.tel))}</button>`:""}</div>`).join("")
+      : `<span class="nocontact">Sin contacto todavía</span>`);
+    let actions = "";
+    if(state.edit){
+      actions = state.confirmId===it.id
+        ? `<span class="confirm">¿Eliminar este programa? <button type="button" class="btn ghost danger" data-del="${esc(it.id)}">Sí, eliminar</button><button type="button" class="btn ghost" data-nodel="1">No</button></span>`
+        : `<button type="button" class="btn act" data-edit="${esc(it.id)}">Editar</button><button type="button" class="btn act" data-askdel="${esc(it.id)}">Eliminar</button>`;
+    }
+    return `<article class="item">
+      <div><h3 class="prog">${esc(it.programa)}</h3>${it.horario?`<div class="hora">${esc(it.horario)}</div>`:""}${actions?`<div class="actions">${actions}</div>`:""}</div>
+      <div>${it.conductores?`<p class="cond">${esc(it.conductores)}</p>`:`<p class="cond empty">Conductores sin cargar</p>`}${it.descripcion?`<p class="desc">${esc(it.descripcion)}</p>`:""}${temas?`<div class="tags">${temas}</div>`:""}</div>
+      <div class="contact">${contactHTML}</div>
+    </article>`;
+  }
+  const box = (t,s) => `<div class="state"><strong>${t}</strong>${s}</div>`;
+  function render(){
+    renderTop();
+    const main = $("#main");
+    if(!configured){ main.innerHTML = box("Falta conectar la planilla", "Pegá la URL de la planilla en la línea API_URL de este archivo."); return; }
+    if(state.error){ main.innerHTML = box("No se pudo cargar la agenda", esc(state.error) + " Recargá la página en unos segundos."); return; }
+    if(!state.loaded){ main.innerHTML = box("Cargando programas…", "Leyendo la planilla."); return; }
+    if(!state.items.length){ main.innerHTML = box("Todavía no hay programas", state.edit ? "Usá «Agregar programa» para cargar el primero." : "Tocá «Editar agenda» para cargar el primero."); return; }
+    const list = filtered();
+    if(!list.length){ main.innerHTML = box("Sin resultados", "Probá con otra búsqueda o quitá los filtros."); return; }
+    const groups = new Map();
+    list.forEach(it => { if(!groups.has(it.canal)) groups.set(it.canal, []); groups.get(it.canal).push(it); });
+    main.innerHTML = `<div style="display:flex;flex-direction:column;gap:26px">` + [...groups.keys()].sort((a,b)=>a.localeCompare(b,"es")).map(k => {
+      const arr = groups.get(k).sort((a,b)=>(a.orden||0)-(b.orden||0) || (a.programa||"").localeCompare(b.programa||"","es"));
+      return `<section class="canal"><h2>${esc(k)} <span class="n">${arr.length} ${arr.length===1?"programa":"programas"}</span></h2><div class="list">${arr.map(itemHTML).join("")}</div></section>`;
+    }).join("") + `</div>`;
+  }
+
+  /* ---------- Formulario ---------- */
+  function contactRow(c={}){
+    const d = document.createElement("div"); d.className="crow";
+    d.innerHTML = `<input placeholder="Nombre" aria-label="Nombre del contacto" class="c-n" value="${esc(c.nombre||"")}">
+      <input placeholder="Rol (ej: Productora)" aria-label="Rol" class="c-r" value="${esc(c.rol||"")}">
+      <input placeholder="Teléfono" aria-label="Teléfono" inputmode="tel" class="c-t tel-in" value="${esc(c.tel||"")}">
+      <button type="button" class="btn ghost" aria-label="Quitar contacto">✕</button>`;
+    d.querySelector("button").onclick = () => d.remove();
+    return d;
+  }
+  function openForm(it){
+    state.editing = it ? it.id : null;
+    $("#formTitle").textContent = it ? "Editar programa" : "Nuevo programa";
+    $("#f-canal").value = it?.canal || (state.canal!=="all"?state.canal:"");
+    $("#f-prog").value = it?.programa || "";
+    $("#f-hora").value = it?.horario || "";
+    $("#f-cond").value = it?.conductores || "";
+    $("#f-temas").value = (it?.temas||[]).join(", ");
+    $("#f-desc").value = it?.descripcion || "";
+    const rows = $("#contactRows"); rows.innerHTML="";
+    const cs = it ? contactos(it) : [];
+    (cs.length?cs:[{}]).forEach(c => rows.appendChild(contactRow(c)));
+    $("#formErr").hidden = true;
+    $("#overlay").hidden = false;
+    document.documentElement.style.overflow = "hidden";
+    setTimeout(()=> (it?$("#f-prog"):$("#f-canal")).focus(), 30);
+  }
+  function closeForm(){ $("#overlay").hidden = true; state.editing = null; document.documentElement.style.overflow = ""; }
+
+  $("#addBtn").onclick = () => openForm(null);
+  $("#cancelBtn").onclick = closeForm;
+  $("#addContact").onclick = () => $("#contactRows").appendChild(contactRow());
+  $("#overlay").addEventListener("click", e => { if(e.target.id==="overlay") closeForm(); });
+  document.addEventListener("keydown", e => { if(e.key==="Escape" && !$("#overlay").hidden) closeForm(); });
+
+  $("#form").addEventListener("submit", async e => {
+    e.preventDefault();
+    const err = $("#formErr");
+    const canal = $("#f-canal").value.trim(), programa = $("#f-prog").value.trim();
+    if(!canal || !programa){ err.textContent="Completá el canal y el nombre del programa."; err.hidden=false; return; }
+    const item = {
+      canal, programa,
+      horario: $("#f-hora").value.trim(),
+      conductores: $("#f-cond").value.trim(),
+      temas: $("#f-temas").value.split(/[,/]+/).map(s=>s.trim()).filter(Boolean),
+      descripcion: $("#f-desc").value.trim(),
+      contactos: [...document.querySelectorAll("#contactRows .crow")].map(r => ({
+        nombre: r.querySelector(".c-n").value.trim(), rol: r.querySelector(".c-r").value.trim(), tel: r.querySelector(".c-t").value.trim()
+      })).filter(c => c.nombre || c.tel)
+    };
+    const editing = state.editing;
+    const btn = $("#saveBtn"); btn.disabled = true; btn.textContent = "Guardando…";
+    try{
+      await apiPost(editing ? { action: "update", id: editing, item } : { action: "create", item });
+      closeForm(); toast(editing ? "Programa actualizado" : "Programa agregado");
+      await load();
+    }catch(x){ err.textContent = writeError(x); err.hidden = false; }
+    finally{ btn.disabled=false; btn.textContent="Guardar"; }
+  });
+
+  /* ---------- Lista ---------- */
+  $("#q").addEventListener("input", e => { state.q = e.target.value; render(); });
+  $("#onlyContact").addEventListener("change", e => { state.onlyContact = e.target.checked; render(); });
+  $("#chips").addEventListener("click", e => { const b=e.target.closest("[data-canal]"); if(!b) return; state.canal=b.dataset.canal; render(); });
+  $("#main").addEventListener("click", async e => {
+    const t = e.target.closest("button"); if(!t) return;
+    const d = t.dataset;
+    if(d.copy){
+      const v = d.copy.replace(/\D/g,"") || d.copy;
+      try{ await navigator.clipboard.writeText(v); toast("Número copiado: "+fmtTel(v)); }
+      catch{ const r=document.createRange(); r.selectNodeContents(t); const s=getSelection(); s.removeAllRanges(); s.addRange(r); toast("Número seleccionado: copialo con Ctrl+C"); }
+    } else if(d.edit){ openForm(state.items.find(i=>i.id===d.edit));
+    } else if(d.askdel){ state.confirmId=d.askdel; render();
+    } else if(d.nodel){ state.confirmId=null; render();
+    } else if(d.del){
+      t.disabled = true;
+      try{ await apiPost({ action: "delete", id: d.del }); state.confirmId=null; toast("Programa eliminado"); await load(); }
+      catch(x){ toast(writeError(x)); render(); }
+    }
+  });
+
+  /* ---------- Inicio ---------- */
+  render();
+  if(configured){
+    load();
+    if(key){ apiPost({ action: "check" }).then(()=>setEdit(true)).catch(()=>{ dropKey(); setEdit(false); }); }
+    else setEdit(false);
+    // Trae los cambios de los demás cada 30 segundos, sin interrumpir a quien está editando.
+    setInterval(() => { if(document.visibilityState==="visible" && $("#overlay").hidden && !state.confirmId) load(); }, 30000);
+  }
+})();
+</script>
+</body>
+</html>
