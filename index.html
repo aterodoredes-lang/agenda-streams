@@ -173,6 +173,23 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 .drop{display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px;border:2px dashed var(--card-line);border-radius:12px;text-align:center;color:var(--muted);cursor:pointer}
 .drop:hover,.drop.over{border-color:var(--accent);color:var(--ink);background:var(--accent-soft)}
 .drop strong{color:var(--ink)}
+/* Encuadre */
+.crop-overlay{position:fixed;inset:0;z-index:35;background:color-mix(in srgb,#0b0e1a 78%,transparent);display:flex;align-items:center;justify-content:center;padding:16px}
+.crop-box{width:min(400px,100%);max-height:100%;overflow-y:auto;background:var(--surface);border:1.5px solid var(--card-line);border-radius:14px;box-shadow:0 4px 0 var(--card-depth),0 24px 60px rgba(0,0,0,.35);padding:20px;display:flex;flex-direction:column;gap:14px}
+.crop-box .gal-title{font-size:1.4rem}
+.stage{position:relative;width:var(--V,280px);height:var(--V,280px);margin:0 auto;border-radius:12px;overflow:hidden;background:#11131c;touch-action:none;cursor:grab;user-select:none}
+.stage:active{cursor:grabbing}
+.stage:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.stage canvas{display:block;width:100%;height:100%}
+.ring{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,255,255,.9);box-shadow:0 0 0 999px rgba(10,12,20,.55);pointer-events:none}
+.zoom{display:flex;align-items:center;gap:10px}
+.zoom input{flex:1;accent-color:var(--accent)}
+.zbtn{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:1.2rem;line-height:1;cursor:pointer}
+.zbtn:hover{border-color:var(--accent);color:var(--accent)}
+.crop-hint{margin:0;font-size:var(--small);color:var(--muted);text-align:center}
+.up-row .av{cursor:pointer}
+.up-tools{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.up-tools .btn.act{padding:4px 10px;font-size:.74rem}
 @media (prefers-reduced-motion:reduce){.track{scroll-behavior:auto}.av.loading{animation:none}}
 
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:.88rem;z-index:40;box-shadow:0 6px 20px rgba(0,0,0,.2)}
@@ -287,6 +304,29 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 </div>
 <input type="file" id="oneFile" accept="image/jpeg,image/png,image/webp" hidden>
 
+<div class="crop-overlay" id="cropper" hidden>
+  <div class="crop-box" role="dialog" aria-modal="true" aria-labelledby="cropTitle">
+    <div>
+      <h3 class="gal-title" id="cropTitle">Encuadrar foto</h3>
+      <p class="gal-sub" id="cropName"></p>
+    </div>
+    <div class="stage" id="stage" tabindex="0" aria-label="Área de encuadre. Usá las flechas para mover la foto y las teclas + o − para acercar o alejar.">
+      <canvas id="cropCanvas"></canvas>
+      <div class="ring"></div>
+    </div>
+    <div class="zoom">
+      <button type="button" class="zbtn" id="zOut" aria-label="Alejar">−</button>
+      <input type="range" id="zoomRange" min="1" max="5" step="0.01" value="1" aria-label="Acercar o alejar">
+      <button type="button" class="zbtn" id="zIn" aria-label="Acercar">+</button>
+    </div>
+    <p class="crop-hint">Arrastrá la foto para ubicar la cara dentro del círculo. Acercá con la barra, la ruedita del mouse o pellizcando en el celular.</p>
+    <div class="panel-foot">
+      <button type="button" class="btn" id="cropCancel">Cancelar</button>
+      <button type="button" class="btn primary" id="cropOk">Usar esta foto</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="uploader" hidden>
   <div class="panel" role="dialog" aria-modal="true" aria-labelledby="upTitle">
     <h3 id="upTitle">Subir fotos</h3>
@@ -381,6 +421,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
   function dropKey(){ key = ""; try{ localStorage.removeItem(LS); }catch(e){} }
   function writeError(e){
     if(e && e.code === "clave"){ dropKey(); setEdit(false); return "La clave de edición cambió. Tocá «Editar agenda» e ingresá la nueva."; }
+    if(e && /Acción desconocida/.test(e.message || "")) return "La planilla todavía usa el código anterior: en Apps Script publicá una «Nueva versión» (Implementar → Gestionar implementaciones).";
     return (e && e.message) || "No se pudo guardar.";
   }
 
@@ -498,7 +539,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
   $("#addContact").onclick = () => $("#contactRows").appendChild(contactRow());
   $("#overlay").addEventListener("click", e => { if(e.target.id==="overlay") closeForm(); });
   document.addEventListener("keydown", e => {
-    if(e.key!=="Escape") return;
+    if(e.key!=="Escape" || !$("#cropper").hidden) return;
     if(!$("#overlay").hidden) closeForm();
     else if(!$("#uploader").hidden) closeUploader();
     else if(state.galleryId) closeGallery();
@@ -597,31 +638,125 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
     render();
   }
 
-  // Recorta en cuadrado, achica y comprime la foto en el navegador antes de subirla.
-  async function comprimir(file){
+  // Abre la imagen elegida.
+  async function cargarImagen(file){
     if(!/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error("Formato no compatible. Usá JPG, PNG o WEBP.");
     const url = URL.createObjectURL(file);
-    try{
-      const img = await new Promise((ok, mal) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => mal(new Error("No se pudo abrir la imagen.")); i.src = url; });
-      const w = img.naturalWidth, h = img.naturalHeight, lado = Math.min(w, h);
-      if(!lado) throw new Error("No se pudo abrir la imagen.");
-      const sx = (w - lado) / 2;
-      const sy = h > w ? (h - lado) * 0.2 : (h - lado) / 2; // en fotos verticales prioriza la cara
-      for(const tam of [320, 260, 200]){
-        const c = document.createElement("canvas");
-        c.width = c.height = Math.min(tam, lado);
-        const ctx = c.getContext("2d");
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, c.width, c.height);
-        ctx.imageSmoothingQuality = "high";
-        ctx.drawImage(img, sx, sy, lado, lado, 0, 0, c.width, c.height);
-        for(let q = 0.84; q >= 0.5; q -= 0.08){
-          const out = c.toDataURL("image/jpeg", q);
-          if(out.length <= 40000) return out;
-        }
-      }
-      throw new Error("La imagen no se pudo achicar lo suficiente.");
-    } finally { URL.revokeObjectURL(url); }
+    const img = await new Promise((ok, mal) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => mal(new Error("No se pudo abrir la imagen.")); i.src = url; });
+    if(!img.naturalWidth || !img.naturalHeight){ URL.revokeObjectURL(url); throw new Error("No se pudo abrir la imagen."); }
+    img._url = url;
+    return img;
   }
+  const soltarImagen = img => { if(img && img._url){ URL.revokeObjectURL(img._url); img._url = null; } };
+
+  // Encuadre automático: cuadrado centrado; en fotos verticales prioriza la parte de arriba (la cara).
+  function recorteInicial(img){
+    const w = img.naturalWidth, h = img.naturalHeight, lado = Math.min(w, h);
+    return { lado, cx: w / 2, cy: h > w ? lado / 2 + (h - lado) * 0.2 : h / 2 };
+  }
+  function ajustarRecorte(img, r){
+    const w = img.naturalWidth, h = img.naturalHeight;
+    const lado = Math.min(Math.max(r.lado, 40), Math.min(w, h));
+    return { lado, cx: Math.min(Math.max(r.cx, lado / 2), w - lado / 2), cy: Math.min(Math.max(r.cy, lado / 2), h - lado / 2) };
+  }
+
+  // Recorta, achica y comprime la foto en el navegador antes de subirla (queda en unos 15-30 KB).
+  function codificar(img, r){
+    r = ajustarRecorte(img, r);
+    for(const tam of [320, 260, 200]){
+      const c = document.createElement("canvas");
+      c.width = c.height = Math.round(Math.min(tam, r.lado));
+      const ctx = c.getContext("2d");
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(img, r.cx - r.lado / 2, r.cy - r.lado / 2, r.lado, r.lado, 0, 0, c.width, c.height);
+      for(let q = 0.84; q >= 0.5; q -= 0.08){
+        const out = c.toDataURL("image/jpeg", q);
+        if(out.length <= 40000) return out;
+      }
+    }
+    throw new Error("La imagen no se pudo achicar lo suficiente.");
+  }
+
+  /* ---------- Ventana para encuadrar ---------- */
+  function encuadrar(img, recorte, nombre){
+    return new Promise(resolve => {
+      const box = $("#cropper"), stage = $("#stage"), cv = $("#cropCanvas"), rango = $("#zoomRange");
+      const w = img.naturalWidth, h = img.naturalHeight, base = Math.min(w, h);
+      const V = Math.min(300, window.innerWidth - 72);
+      stage.style.setProperty("--V", V + "px");
+      const dpr = window.devicePixelRatio || 1;
+      cv.width = cv.height = Math.round(V * dpr);
+      const ctx = cv.getContext("2d");
+      let r = ajustarRecorte(img, recorte || recorteInicial(img));
+      const zoomDe = lado => base / lado;
+      function dibujar(){
+        const s = cv.width / r.lado;
+        ctx.fillStyle = "#11131c"; ctx.fillRect(0, 0, cv.width, cv.height);
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(img, cv.width / 2 - r.cx * s, cv.height / 2 - r.cy * s, w * s, h * s);
+        rango.value = String(zoomDe(r.lado));
+      }
+      function zoomA(z, fx = 0.5, fy = 0.5){
+        z = Math.min(Math.max(z, 1), 5);
+        const nuevo = base / z;
+        // mantiene fijo el punto bajo el cursor (o el centro)
+        const px = r.cx + (fx - 0.5) * r.lado, py = r.cy + (fy - 0.5) * r.lado;
+        r = ajustarRecorte(img, { lado: nuevo, cx: px - (fx - 0.5) * nuevo, cy: py - (fy - 0.5) * nuevo });
+        dibujar();
+      }
+      function mover(dx, dy){ // dx, dy en píxeles de pantalla
+        const k = r.lado / V;
+        r = ajustarRecorte(img, { lado: r.lado, cx: r.cx - dx * k, cy: r.cy - dy * k });
+        dibujar();
+      }
+      const punteros = new Map(); let distInicial = 0, zoomInicial = 1;
+      const onDown = e => { stage.setPointerCapture(e.pointerId); punteros.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if(punteros.size === 2){ const [a, b] = [...punteros.values()]; distInicial = Math.hypot(a.x - b.x, a.y - b.y); zoomInicial = zoomDe(r.lado); } };
+      const onMove = e => {
+        if(!punteros.has(e.pointerId)) return;
+        const prev = punteros.get(e.pointerId); punteros.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if(punteros.size === 1) mover(e.clientX - prev.x, e.clientY - prev.y);
+        else if(punteros.size === 2 && distInicial){ const [a, b] = [...punteros.values()]; zoomA(zoomInicial * Math.hypot(a.x - b.x, a.y - b.y) / distInicial); }
+      };
+      const onUp = e => { punteros.delete(e.pointerId); if(punteros.size < 2) distInicial = 0; };
+      const onWheel = e => { e.preventDefault(); const b = stage.getBoundingClientRect();
+        zoomA(zoomDe(r.lado) * (e.deltaY < 0 ? 1.08 : 1 / 1.08), (e.clientX - b.left) / b.width, (e.clientY - b.top) / b.height); };
+      const onKey = e => {
+        const paso = 12, mapa = { ArrowLeft: [paso, 0], ArrowRight: [-paso, 0], ArrowUp: [0, paso], ArrowDown: [0, -paso] };
+        if(mapa[e.key] && e.target !== rango){ e.preventDefault(); mover(...mapa[e.key]); }
+        else if(e.key === "+" || e.key === "="){ e.preventDefault(); zoomA(zoomDe(r.lado) * 1.1); }
+        else if(e.key === "-"){ e.preventDefault(); zoomA(zoomDe(r.lado) / 1.1); }
+        else if(e.key === "Enter" && e.target.tagName !== "BUTTON"){ e.preventDefault(); terminar(true); }
+        else if(e.key === "Escape"){ e.preventDefault(); e.stopPropagation(); terminar(false); }
+      };
+      const onRange = () => zoomA(parseFloat(rango.value));
+      const zIn = () => zoomA(zoomDe(r.lado) * 1.15), zOut = () => zoomA(zoomDe(r.lado) / 1.15);
+      const onBack = e => { if(e.target === box) terminar(false); };
+      function terminar(ok){
+        stage.removeEventListener("pointerdown", onDown); stage.removeEventListener("pointermove", onMove);
+        stage.removeEventListener("pointerup", onUp); stage.removeEventListener("pointercancel", onUp);
+        stage.removeEventListener("wheel", onWheel); document.removeEventListener("keydown", onKey, true);
+        rango.removeEventListener("input", onRange); $("#zIn").removeEventListener("click", zIn); $("#zOut").removeEventListener("click", zOut);
+        box.removeEventListener("click", onBack);
+        $("#cropOk").onclick = null; $("#cropCancel").onclick = null;
+        box.hidden = true;
+        resolve(ok ? r : null);
+      }
+      stage.addEventListener("pointerdown", onDown); stage.addEventListener("pointermove", onMove);
+      stage.addEventListener("pointerup", onUp); stage.addEventListener("pointercancel", onUp);
+      stage.addEventListener("wheel", onWheel, { passive: false }); document.addEventListener("keydown", onKey, true);
+      rango.addEventListener("input", onRange); $("#zIn").addEventListener("click", zIn); $("#zOut").addEventListener("click", zOut);
+      box.addEventListener("click", onBack);
+      $("#cropOk").onclick = () => terminar(true);
+      $("#cropCancel").onclick = () => terminar(false);
+      $("#cropName").textContent = nombre ? nombre : "";
+      box.hidden = false;
+      dibujar();
+      setTimeout(() => stage.focus(), 30);
+    });
+  }
+
   const pesoKB = dataUrl => Math.round(dataUrl.length * 0.75 / 1024);
 
   async function guardarFoto(nombre, foto){
@@ -699,16 +834,22 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
   $("#oneFile").addEventListener("change", async e => {
     const f = e.target.files[0]; if(!f || !fotoPara) return;
     const n = fotoPara; fotoPara = null;
+    let img = null;
     try{
+      img = await cargarImagen(f);
+      const r = await encuadrar(img, null, n);
+      if(!r) return;
+      const foto = codificar(img, r);
       toast("Subiendo foto…");
-      await guardarFoto(n, await comprimir(f));
+      await guardarFoto(n, foto);
       toast("Foto guardada"); render();
     }catch(x){ toast(writeError(x)); }
+    finally{ soltarImagen(img); }
     renderGallery();
   });
 
   /* ---------- Subir fotos en lote ---------- */
-  let cola = []; // { id, file, foto, nombre, estado }
+  let cola = []; // { id, file, img, recorte, foto, nombre, estado }
   function nombreDesdeArchivo(fn){
     const base = fn.replace(/\.[^.]+$/, "").replace(/\s*\(\d+\)$/, "").replace(/[_\-.]+/g, " ").replace(/\s+\d+$/, "").trim();
     const k = claveNombre(base);
@@ -725,13 +866,16 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
     $("#personas").innerHTML = todasLasPersonas().map(n => `<option value="${esc(n)}">`).join("");
     $("#uploader").hidden = false; document.documentElement.style.overflow = "hidden";
   }
-  function closeUploader(){ $("#uploader").hidden = true; document.documentElement.style.overflow = ""; cola = []; }
+  function closeUploader(){ $("#uploader").hidden = true; document.documentElement.style.overflow = ""; cola.forEach(c => soltarImagen(c.img)); cola = []; }
   function renderCola(){
     $("#upList").innerHTML = cola.map(c => `<div class="up-row ${c.estado==="ok"?"ok":c.estado==="error"?"fail":""}" data-q="${c.id}">
-        <span class="av ${c.foto?"":"loading"}">${c.foto?`<img src="${c.foto}" alt="">`:""}</span>
+        <span class="av ${c.foto?"":"loading"}" ${c.foto && c.estado!=="ok" ? `data-crop="${c.id}" title="Encuadrar"` : ""}>${c.foto?`<img src="${c.foto}" alt="">`:""}</span>
         <div><input list="personas" value="${esc(c.nombre)}" aria-label="Nombre de la persona" data-name="${c.id}" ${c.estado==="ok"?"disabled":""}>
           <div class="up-meta">${c.estado==="ok" ? "Guardada" : c.estado==="error" ? esc(c.error) : c.estado==="subiendo" ? "Subiendo…" : c.foto ? pesoKB(c.foto)+" KB · "+(state.conFoto.has(claveNombre(c.nombre))?"reemplaza la foto actual":"foto nueva") : "Preparando…"}</div></div>
-        <button type="button" class="btn ghost" data-quitar="${c.id}" aria-label="Quitar de la lista" ${c.estado==="subiendo"?"disabled":""}>✕</button>
+        <div class="up-tools">
+          ${c.img && c.estado!=="ok" && c.estado!=="subiendo" ? `<button type="button" class="btn act" data-crop="${c.id}">Encuadrar</button>` : ""}
+          <button type="button" class="btn ghost" data-quitar="${c.id}" aria-label="Quitar de la lista" ${c.estado==="subiendo"?"disabled":""}>✕</button>
+        </div>
       </div>`).join("");
     const listas = cola.filter(c => c.foto && c.estado !== "ok" && c.estado !== "subiendo");
     $("#upSave").disabled = !listas.length;
@@ -741,7 +885,8 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
     const nuevos = [...files].map((file, i) => ({ id: "q" + Date.now() + i, file, foto: "", nombre: nombreDesdeArchivo(file.name), estado: "" }));
     cola = cola.concat(nuevos); renderCola();
     for(const c of nuevos){
-      try{ c.foto = await comprimir(c.file); }catch(x){ c.estado = "error"; c.error = x.message; }
+      try{ c.img = await cargarImagen(c.file); c.recorte = recorteInicial(c.img); c.foto = codificar(c.img, c.recorte); }
+      catch(x){ c.estado = "error"; c.error = x.message; }
       renderCola();
     }
   }
@@ -755,7 +900,14 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
   drop.addEventListener("drop", e => { if(e.dataTransfer && e.dataTransfer.files.length) agregarArchivos(e.dataTransfer.files); });
   $("#upList").addEventListener("input", e => { const id = e.target.dataset.name; const c = cola.find(x => x.id === id); if(c){ c.nombre = e.target.value; } });
   $("#upList").addEventListener("change", e => { if(e.target.dataset.name) renderCola(); });
-  $("#upList").addEventListener("click", e => { const b = e.target.closest("[data-quitar]"); if(!b) return; cola = cola.filter(c => c.id !== b.dataset.quitar); renderCola(); });
+  $("#upList").addEventListener("click", async e => {
+    const q = e.target.closest("[data-quitar]");
+    if(q){ const c = cola.find(x => x.id === q.dataset.quitar); if(c) soltarImagen(c.img); cola = cola.filter(x => x.id !== q.dataset.quitar); renderCola(); return; }
+    const b = e.target.closest("[data-crop]"); if(!b) return;
+    const c = cola.find(x => x.id === b.dataset.crop); if(!c || !c.img) return;
+    const r = await encuadrar(c.img, c.recorte, c.nombre);
+    if(r){ c.recorte = r; c.foto = codificar(c.img, r); if(c.estado === "error") c.estado = ""; renderCola(); }
+  });
   $("#upSave").onclick = async () => {
     const err = $("#upErr"); err.hidden = true;
     const listas = cola.filter(c => c.foto && c.estado !== "ok");
